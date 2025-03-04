@@ -1,0 +1,6 @@
+/* First, import Tailwind’s base styles. */
+@tailwind base;
+
+/* Next, import Tailwind’s component and utility classes. */
+@tailwind components;
+@tailwind utilities;
