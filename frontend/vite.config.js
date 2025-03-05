@@ -7,5 +7,4 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   assetsInclude: ["**/*.gltf", "**/*.glb"],
-  base:  "/workout_assistant/",
 })

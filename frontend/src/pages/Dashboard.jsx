@@ -75,17 +75,21 @@ export default function Dashboard() {
     </button>
   </div>
 
-  {/* Main Content (ModelViewer + Workout List) */}
-  <div className="rounded-lg shadow-md p-4 bg-white flex-1 overflow-y-auto">
-    {/* ModelViewer at the top, full width */}
-    <div className="sticky top-0 bg-white z-10 p-2 shadow-md">
-      <div className="w-[300px] h-[400px] bg-white shadow-md rounded-lg overflow-hidden flex items-center justify-center">
+  {/* Main Content: Side-by-Side Layout */}
+  <div className="flex flex-row gap-4 bg-white rounded-lg shadow-md p-4 flex-1">
+    
+    {/* Left Side: ModelViewer (Thinner & Full Height) */}
+    <div className="w-[30%] h-full flex items-center justify-center">
+      <div className="w-full h-full bg-white shadow-md rounded-lg overflow-hidden flex items-center justify-center">
         <ModelViewer selectedDate={selectedDate} />
       </div>
     </div>
 
-    {/* Workout List below ModelViewer */}
-    <WorkoutList workouts={workouts} />
+    {/* Right Side: Scrollable Workout List */}
+    <div className="w-[70%] h-full overflow-y-auto p-4 bg-gray-100 rounded-lg shadow-inner">
+      <WorkoutList workouts={workouts} />
+    </div>
+
   </div>
 </div>
     </div>
