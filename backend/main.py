@@ -7,6 +7,8 @@ from collections import defaultdict
 import numpy as np
 from dotenv import load_dotenv
 import os
+import re
+from muscles import MUSCLE_GROUPS
 
 load_dotenv()
 
@@ -263,6 +265,150 @@ def process_workout_data(results):
             })
 
     return processed_data
+
+def fetch_muscle_activation_from_openai(exercises):
+    """
+    Calls OpenAI to determine which muscle groups were activated based on exercises.
+
+    Args:
+        exercises (list): List of exercise names.
+
+    Returns:
+        str: Raw response from OpenAI as a JSON string.
+    """
+    prompt = f"""
+    Given the following exercises, determine the muscle groups activated and their activation intensity.
+
+    Exercises: {', '.join(exercises)}
+
+    Only use the following predefined muscle groups:
+    {json.dumps(list(MUSCLE_GROUPS.keys()), indent=2)}
+
+    Respond in JSON format with muscle groups as keys and activation intensity as values.
+    Example output:
+    {{
+        "chest": 1.0,
+        "triceps": 0.6
+    }}
+
+    - Use `1.0` for primary muscles.
+    - Use `0.6` for secondary muscles.
+    - If muscle is not used omit it.
+    - If an exercise does not match any known muscle group, omit it.
+
+    Return **only** valid JSON, with no extra text.
+    """
+
+    client = openai.OpenAI(api_key=OPENAI_API_KEY)
+    
+    try:
+        response = client.chat.completions.create(
+            model="gpt-4-turbo",
+            messages=[
+                {"role": "system", "content": "You are a fitness expert."},
+                {"role": "user", "content": prompt}
+            ],
+            max_tokens=200
+        )
+
+        logging.info(f"🔍 ChatGPT Response: {response}")
+        return response.choices[0].message.content.strip()
+    
+    except Exception as e:
+        logging.error(f"❌ OpenAI API Error: {e}")
+        return "{}"  # Return empty JSON if there's an error
+
+def process_muscle_activation_response(response_content):
+    """
+    Processes OpenAI's response and maps muscle groups to actual muscles.
+
+    Args:
+        response_content (str): JSON string from OpenAI response.
+
+    Returns:
+        dict: Dictionary mapping individual muscles to activation levels.
+    """
+    try:
+        # 🔍 Remove markdown formatting (e.g., ```json ... ```)
+        response_content = re.sub(r"```json|```", "", response_content).strip()
+
+        activation_data = json.loads(response_content)  # Parse cleaned JSON string
+        final_activation = {}
+
+        for muscle_group, activation_value in activation_data.items():
+            if muscle_group.lower() in MUSCLE_GROUPS:  # Match lowercase to avoid mismatches
+                for muscle in MUSCLE_GROUPS[muscle_group.lower()]:
+                    final_activation[muscle] = max(
+                        final_activation.get(muscle, 0), activation_value
+                    )
+
+        logging.info(f"✅ Processed Muscle Activation: {final_activation}")
+        return final_activation
+
+    except json.JSONDecodeError as json_error:
+        logging.error(f"❌ JSON Decode Error: {json_error} - Raw Response: {response_content}")
+        return {}
+    except Exception as e:
+        logging.error(f"❌ Error processing muscle activation: {e}")
+        return {}
+
+def determine_muscle_activation(workouts):
+    """
+    Determines muscle activation based on workouts using ChatGPT inference.
+
+    Args:
+        workouts (list): List of workout entries for the day.
+
+    Returns:
+        dict: Muscle activation mapping with intensities.
+    """
+    if not workouts:
+        return {}
+
+    exercises = [w["exercise_name"] for w in workouts]
+    raw_response = fetch_muscle_activation_from_openai(exercises)
+    return process_muscle_activation_response(raw_response)
+
+def fetch_workouts_for_date(google_id, date):
+    """
+    Fetches workouts for a given date from the database.
+    
+    Args:
+        google_id (str): The user's Google ID.
+        date (str): The date for which workouts are fetched (format: YYYY-MM-DD).
+
+    Returns:
+        list: List of workout entries for the specified date.
+    """
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    cur.execute(
+        """
+        SELECT exercise_name, reps, 1 as total_sets, weight, set_time as timestamp 
+        FROM workouts 
+        WHERE google_id = %s AND DATE(set_time) = %s
+        ORDER BY set_time ASC
+        """,
+        (google_id, date),
+    )
+
+    workouts = cur.fetchall()
+    cur.close()
+    conn.close()
+
+    # Convert to dictionary format
+    workout_list = []
+    for row in workouts:
+        workout_list.append({
+            "exercise_name": row[0],
+            "total_reps": row[1],
+            "total_sets": row[2],
+            "weight": row[3],
+            "timestamp": row[4].strftime("%Y-%m-%d %H:%M:%S")
+        })
+
+    return workout_list
 
 if __name__ == "__main__":
     """
