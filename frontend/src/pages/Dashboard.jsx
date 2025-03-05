@@ -3,6 +3,7 @@ import CalendarComponent from "../components/Calendar";
 import WorkoutList from "../components/WorkoutList";
 import Chatbot from "../components/Chatbot";
 import WorkoutProgress from "../components/WorkoutProgress";
+import ModelViewer from "../components/ModelViewer";
 
 export default function Dashboard() {
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -64,20 +65,29 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Right Section: Workouts Display */}
-      <div className="flex-1 flex flex-col p-4">
-        <div className="rounded-lg shadow-md p-4 bg-white h-1/2 overflow-y-auto">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-bold">Workouts for {selectedDate.toDateString()}</h2>
-            <button onClick={handleLogout} className="bg-red-500 text-white px-4 py-2 rounded">
-              Logout
-            </button>
-          </div>
-          <WorkoutList workouts={workouts} />
-        </div>
-        {/* Workout Progress Graphs (Below, Separate Container) */}
-        <WorkoutProgress selectedDate={selectedDate} />
+{/* Right Section: Workouts Display */}
+<div className="flex-1 flex flex-col p-4">
+  {/* Header: Title & Logout */}
+  <div className="flex justify-between items-center mb-4">
+    <h2 className="text-2xl font-bold">Workouts for {selectedDate.toDateString()}</h2>
+    <button onClick={handleLogout} className="bg-red-500 text-white px-4 py-2 rounded">
+      Logout
+    </button>
+  </div>
+
+  {/* Main Content (ModelViewer + Workout List) */}
+  <div className="rounded-lg shadow-md p-4 bg-white flex-1 overflow-y-auto">
+    {/* ModelViewer at the top, full width */}
+    <div className="sticky top-0 bg-white z-10 p-2 shadow-md">
+      <div className="w-[300px] h-[400px] bg-white shadow-md rounded-lg overflow-hidden flex items-center justify-center">
+        <ModelViewer selectedDate={selectedDate} />
       </div>
+    </div>
+
+    {/* Workout List below ModelViewer */}
+    <WorkoutList workouts={workouts} />
+  </div>
+</div>
     </div>
   );
 }

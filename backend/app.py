@@ -8,7 +8,7 @@ import jwt as pyjwt
 from google.auth.transport import requests
 from google.oauth2 import id_token
 from functools import wraps
-from main import TIMEFRAME_MAP, extract_workout_data, insert_workout, fetch_workout_history
+from main import TIMEFRAME_MAP, extract_workout_data, insert_workout, fetch_workout_history, determine_muscle_activation, fetch_workouts_for_date
 
 # Initialize Flask app
 app = Flask(__name__)
@@ -212,6 +212,16 @@ def get_workout_history(timeframe):
     except Exception as e:
         logging.error(f"Error fetching workout history: {e}", exc_info=True)
         return jsonify({"error": "Internal server error"}), 500
+
+@app.route("/muscle-activation/<date>", methods=["GET"])
+@authenticate_user
+def get_muscle_activation(date):
+    """API endpoint to fetch muscle activation for a given date."""
+    google_id = request.google_id
+    workouts = fetch_workouts_for_date(google_id, date)
+    muscle_activation = determine_muscle_activation(workouts)
+    return jsonify({"success": True, "muscleActivation": muscle_activation})
+
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5001, debug=True)
