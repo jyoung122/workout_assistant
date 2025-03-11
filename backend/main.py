@@ -18,8 +18,31 @@ OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
 def get_db_connection():
-    """Establishes and returns a connection to the PostgreSQL database."""
-    return psycopg2.connect("dbname=wa user=jaredhawkins-young host=localhost")
+    """Establishes and returns a connection to the Google Cloud SQL PostgreSQL database."""
+    try:
+        logging.info("🌐 Attempting to connect to Google Cloud SQL PostgreSQL...")
+
+        # Connection details (Using your actual details from the previous logs)
+        db_user = "postgres"  # Your Cloud SQL username
+        db_password = "1845"  # Securely fetch from environment variable
+        db_name = "postgres"  # Your database name in Cloud SQL
+        db_host = "35.193.103.85"  # Your Cloud SQL Public IP
+
+        # Connect to the database
+        conn = psycopg2.connect(
+            dbname=db_name,
+            user=db_user,
+            password=db_password,
+            host=db_host,
+            port=5432
+        )
+
+        logging.info("✅ Successfully connected to Google Cloud SQL!")
+        return conn
+
+    except psycopg2.Error as e:
+        logging.error(f"❌ Database connection failed: {e}")
+        return None
 
 def extract_workout_data(user_sentence: str, conversation_history: list) -> dict:
     """
@@ -182,7 +205,6 @@ def fetch_workout_history(google_id, timeframe):
     
     return processed_data
 
-
 # 🔹 **1. Query the database for raw workout data**
 def query_workout_data(google_id, timeframe):
     """
@@ -222,7 +244,6 @@ def query_workout_data(google_id, timeframe):
     cur.close()
     conn.close()
     return results
-
 
 # 🔹 **2. Process the raw data into meaningful workout insights**
 def process_workout_data(results):
@@ -329,21 +350,25 @@ def process_muscle_activation_response(response_content):
         dict: Dictionary mapping individual muscles to activation levels.
     """
     try:
-        # 🔍 Remove markdown formatting (e.g., ```json ... ```)
-        response_content = re.sub(r"```json|```", "", response_content).strip()
+        logging.info(f"🧐 Raw OpenAI Response: {repr(response_content)}")  # Debugging
 
-        activation_data = json.loads(response_content)  # Parse cleaned JSON string
-        final_activation = {}
+        # ✅ Clean response to remove excessive newlines and markdown
+        response_content = response_content.strip().replace("\n", "")
+        if response_content.startswith("```json"):
+            response_content = response_content.replace("```json", "").replace("```", "").strip()
 
-        for muscle_group, activation_value in activation_data.items():
-            if muscle_group.lower() in MUSCLE_GROUPS:  # Match lowercase to avoid mismatches
-                for muscle in MUSCLE_GROUPS[muscle_group.lower()]:
-                    final_activation[muscle] = max(
-                        final_activation.get(muscle, 0), activation_value
-                    )
+        activation_data = json.loads(response_content)  # ✅ Parse JSON safely
 
-        logging.info(f"✅ Processed Muscle Activation: {final_activation}")
-        return final_activation
+        # ✅ Fix issue: OpenAI response nests muscle activation under exercise names
+        flattened_activation = {}
+        for exercise, muscles in activation_data.items():  # Loop through exercises
+            for muscle_group, activation_value in muscles.items():  # Loop through muscle groups
+                if muscle_group.lower() in MUSCLE_GROUPS:
+                    for muscle in MUSCLE_GROUPS[muscle_group.lower()]:
+                        flattened_activation[muscle] = max(flattened_activation.get(muscle, 0), activation_value)
+
+        logging.info(f"✅ Processed Muscle Activation: {flattened_activation}")
+        return flattened_activation
 
     except json.JSONDecodeError as json_error:
         logging.error(f"❌ JSON Decode Error: {json_error} - Raw Response: {response_content}")
@@ -385,7 +410,7 @@ def fetch_workouts_for_date(google_id, date):
 
     cur.execute(
         """
-        SELECT exercise_name, reps, 1 as total_sets, weight, set_time as timestamp 
+        SELECT exercise_name, reps, weight, description, set_time 
         FROM workouts 
         WHERE google_id = %s AND DATE(set_time) = %s
         ORDER BY set_time ASC

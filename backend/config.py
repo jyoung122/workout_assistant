@@ -1,7 +1,7 @@
 import os
 
 # Database configuration
-SQLALCHEMY_DATABASE_URI = "postgresql://jaredhawkins-young@localhost/wa"
+SQLALCHEMY_DATABASE_URI = "postgresql://postgres:1845@35.193.103.85/postgres"
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 # Flask settings
