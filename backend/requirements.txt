@@ -134,6 +134,7 @@ glob2 @ file:///home/linux1/recipes/ci/glob2_1610991677669/work
 gmpy2 @ file:///Users/cbousseau/work/recipes/ci_py311/gmpy2_1677937751357/work
 google-auth==2.38.0
 greenlet==3.0.3
+gunicorn==23.0.0
 h11==0.14.0
 h5netcdf==1.5.0
 h5py @ file:///private/var/folders/k1/30mswbxs7r1g6zwn8y4fyt500000gp/T/abs_9a3s_y3izc/croot/h5py_1691589712568/work
@@ -499,4 +500,3 @@ zict @ file:///private/var/folders/nz/j6p8yfhx1mv_0grj5xl4650h0000gp/T/abs_06f3l
 zipp @ file:///Users/cbousseau/work/recipes/ci_py311/zipp_1677907997878/work
 zope.interface @ file:///Users/cbousseau/work/recipes/ci_py311/zope.interface_1678055276546/work
 zstandard @ file:///Users/cbousseau/work/recipes/ci_py311_2/zstandard_1678996192313/work
-gunicorn

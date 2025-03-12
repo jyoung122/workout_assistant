@@ -8,7 +8,7 @@ import numpy as np
 from dotenv import load_dotenv
 import os
 import re
-from muscles import MUSCLE_GROUPS
+from backend.muscles import MUSCLE_GROUPS
 
 load_dotenv()
 

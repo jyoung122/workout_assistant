@@ -12,14 +12,14 @@ from google.oauth2 import id_token
 from functools import wraps
 
 import psycopg2
-from main import TIMEFRAME_MAP, extract_workout_data, insert_workout, fetch_workout_history, determine_muscle_activation, fetch_workouts_for_date
+from backend.main import TIMEFRAME_MAP, extract_workout_data, insert_workout, fetch_workout_history, determine_muscle_activation, fetch_workouts_for_date
 
 # Initialize Flask app
 app = Flask(__name__)
 CORS(app)
 
 # Load configuration
-app.config.from_object('config')
+app.config.from_object('backend.config')
 
 # Initialize database
 db = SQLAlchemy(app)

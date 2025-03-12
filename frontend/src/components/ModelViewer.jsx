@@ -6,14 +6,6 @@ import * as THREE from "three"; // ✅ Import Three.js explicitly
 export default function ModelViewer({ selectedDate, token }) {
   const { scene } = useGLTF("/models/muscles.glb"); // ✅ Loads the muscle model
   const [muscleActivation, setMuscleActivation] = useState({});
-  const gradients = [
-    { name: "🔥 Deep Red → ❄️ Frostbite Blue", colors: ["#D60000", "#5AA7E7"] }, // More muted icy tone
-    { name: "🔥 Deep Red → ❄️ Glacier Blue", colors: ["#D60000", "#4F9FDD"] }, // A balanced cool blue
-    { name: "🔥 Deep Red → ❄️ Ice Storm Blue", colors: ["#D60000", "#3D8BC9"] }, // Deeper icy shade
-    { name: "🔥 Deep Red → ❄️ Midnight Ice", colors: ["#D60000", "#2F7BB5"] }, // Darker, colder blue
-    { name: "🔥 Deep Red → ❄️ Arctic Chill", colors: ["#D60000", "#63B3ED"] }, 
-  ];
-
   // 🛠 Fetch muscle activation data when the date changes
   useEffect(() => {
     if (!selectedDate) return;
@@ -27,7 +19,7 @@ export default function ModelViewer({ selectedDate, token }) {
       return;
     }
 
-    fetch(`http://127.0.0.1:5001/muscle-activation/${formattedDate}`, {
+    fetch(`workoutassistant-production.up.railway.app/muscle-activation/${formattedDate}`, {
       method: "GET",
       headers: {
         "Authorization": `Bearer ${token}`,  // ✅ Use authentication
@@ -55,31 +47,6 @@ export default function ModelViewer({ selectedDate, token }) {
     console.log("✅ Model Loaded Successfully!");
 
     let foundAny = false;
-
-    // scene.traverse((obj) => {
-    //   if (obj.isMesh) {
-    //     obj.material = new THREE.MeshStandardMaterial(); // ✅ Force a new material
-    //     obj.material.needsUpdate = true;
-    //     obj.material.colorWrite = true;
-    
-    //     // 🚨 Remove any existing texture (prevents conflicts)
-    //     obj.material.map = null;
-    //     obj.material.needsUpdate = true;
-    
-    //     if (muscleActivation.hasOwnProperty(obj.name)) {
-    //       obj.material.color.setRGB(1, 0, 0); // 🔥 Set muscle color to red
-    //       obj.material.opacity = Math.max(muscleActivation[obj.name], 0.051);
-    //       obj.material.transparent = true;
-    //       obj.material.needsUpdate = true;
-    //     } else {
-    //       obj.material.color.setRGB(0.5, 0.7, 1); // 🔵 Set non-active muscles to blue
-    //       obj.material.opacity = 0.3; // Adjust visibility
-    //       obj.material.needsUpdate = true;
-    //     }
-    //   }
-    // });
-
-    
 
     scene.traverse((obj) => {
       if (obj.isMesh) {

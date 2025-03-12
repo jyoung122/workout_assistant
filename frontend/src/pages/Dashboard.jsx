@@ -21,7 +21,7 @@ export default function Dashboard() {
       return;
     }
 
-    fetch(`http://127.0.0.1:5001/workouts/${formattedDate}`, {
+    fetch(`workoutassistant-production.up.railway.app/workouts/${formattedDate}`, {
       method: "GET",
       headers: {
         "Authorization": `Bearer ${token}`, // Send JWT token for authentication
