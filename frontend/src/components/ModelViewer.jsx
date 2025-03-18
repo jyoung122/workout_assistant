@@ -19,7 +19,7 @@ export default function ModelViewer({ selectedDate, token }) {
       return;
     }
 
-    fetch(`workoutassistant-production.up.railway.app/muscle-activation/${formattedDate}`, {
+    fetch(`http://localhost:8080/muscle-activation/${formattedDate}`, {
       method: "GET",
       headers: {
         "Authorization": `Bearer ${token}`,  // ✅ Use authentication

@@ -12,10 +12,57 @@ from backend.muscles import MUSCLE_GROUPS
 
 load_dotenv()
 
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+
+def create_openai_client(api_key=None):
+    """
+    Factory function to create an OpenAI client that bypasses the proxies issue.
+    
+    This directly imports and instantiates the OpenAI class with only the API key,
+    completely avoiding any proxy settings that might be automatically applied.
+    """
+    from openai import OpenAI
+    
+    # Use the provided API key or get it from environment
+    if api_key is None:
+        api_key = os.getenv('OPENAI_API_KEY', '')
+    
+    logging.info("Creating OpenAI client using custom factory function")
+    
+    try:
+        # Create a new instance directly, avoiding any automatic proxy detection
+        client = OpenAI.__new__(OpenAI)
+        
+        # Only set the api_key attribute directly
+        object.__setattr__(client, "api_key", api_key)
+        
+        # Initialize other required attributes to default values
+        object.__setattr__(client, "base_url", "https://api.openai.com/v1")
+        object.__setattr__(client, "timeout", 600)
+        object.__setattr__(client, "max_retries", 2)
+        
+        # Initialize the client's resources
+        object.__setattr__(client, "_init_resources", True)
+        
+        logging.info("✅ Successfully created OpenAI client with custom factory")
+        return client
+    
+    except Exception as e:
+        logging.error(f"❌ Error creating OpenAI client with custom factory: {e}")
+        import traceback
+        logging.error(traceback.format_exc())
+        
+        # Last resort: try importing directly from module with minimum code
+        try:
+            from openai import OpenAI as DirectOpenAI
+            logging.info("Attempting fallback OpenAI client creation")
+            return DirectOpenAI(api_key=api_key)
+        except Exception as e2:
+            logging.error(f"❌ Fallback OpenAI client creation also failed: {e2}")
+            raise
 
 def get_db_connection():
     """Establishes and returns a connection to the Google Cloud SQL PostgreSQL database."""
@@ -44,15 +91,80 @@ def get_db_connection():
         logging.error(f"❌ Database connection failed: {e}")
         return None
 
+def call_openai_api_directly(messages, model="gpt-4", max_tokens=None, api_key=None):
+    """
+    Makes a direct HTTP request to the OpenAI API without using the OpenAI client.
+    
+    Args:
+        messages (list): List of message objects with role and content
+        model (str): The model to use (default: "gpt-4")
+        max_tokens (int, optional): Maximum tokens to generate
+        api_key (str, optional): API key to use, defaults to env variable if None
+        
+    Returns:
+        str: The response content or None if request failed
+    """
+    import requests
+    
+    # Use provided API key or get from environment
+    if api_key is None:
+        api_key = os.getenv('OPENAI_API_KEY', '')
+    
+    logging.info(f"Making direct request to OpenAI API with model: {model}")
+    
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json"
+    }
+    
+    payload = {
+        "model": model,
+        "messages": messages
+    }
+    
+    if max_tokens:
+        payload["max_tokens"] = max_tokens
+    
+    # Create a session with explicit empty proxies
+    session = requests.Session()
+    session.proxies = {
+        "http": None,
+        "https": None,
+    }
+    
+    try:
+        response = session.post(
+            "https://api.openai.com/v1/chat/completions",
+            headers=headers,
+            json=payload,
+            timeout=60
+        )
+        
+        if response.status_code == 200:
+            content = response.json()["choices"][0]["message"]["content"]
+            logging.info(f"Successfully received response from OpenAI API")
+            return content
+        else:
+            logging.error(f"API request failed: {response.status_code} - {response.text}")
+            return None
+    except Exception as e:
+        logging.error(f"Error making request to OpenAI API: {e}")
+        import traceback
+        logging.error(traceback.format_exc())
+        return None
+
 def extract_workout_data(user_sentence: str, conversation_history: list) -> dict:
     """
-    Calls OpenAI LLM to extract structured workout data from a sentence.
+    Calls OpenAI LLM to extract structured workout data from a sentence using direct API requests.
     Uses conversation history to track missing values and prevents invalid JSON responses.
     """
-    logging.info("Extracting workout data using OpenAI.")
+    logging.info("Extracting workout data using direct OpenAI API request.")
 
-    # Append user input to conversation history
-    conversation_history.append({"role": "user", "content": user_sentence})
+    # Copy conversation history to avoid modifying the original
+    messages = list(conversation_history)
+    
+    # Append user input to messages
+    messages.append({"role": "user", "content": user_sentence})
 
     # System Prompt
     system_prompt = """
@@ -73,17 +185,15 @@ def extract_workout_data(user_sentence: str, conversation_history: list) -> dict
     }
     """
 
-    try:
-        client = openai.OpenAI(api_key=OPENAI_API_KEY)
-        response = client.chat.completions.create(
-            model="gpt-4",
-            messages=[
-                {"role": "system", "content": system_prompt},
-                *conversation_history,  # Pass conversation history
-            ]
-        )
+    # Add system message at the beginning
+    messages = [{"role": "system", "content": system_prompt}] + messages
 
-        response_text = response.choices[0].message.content.strip()
+    try:
+        # Make direct API request
+        response_text = call_openai_api_directly(
+            messages=messages,
+            model="gpt-4"
+        )
 
         if not response_text:
             logging.error("OpenAI returned an empty response.")
@@ -106,6 +216,7 @@ def extract_workout_data(user_sentence: str, conversation_history: list) -> dict
 
     except Exception as e:
         logging.error(f"OpenAI extraction failed: {e}")
+        logging.error(f"Exception details: {type(e)}")
         return {}
 
 def insert_workout(user_id: int, exercise_name: str, weight: float, reps: int, description: str = None):
@@ -297,10 +408,16 @@ def fetch_muscle_activation_from_openai(exercises):
     Returns:
         str: Raw response from OpenAI as a JSON string.
     """
+    # Check if all exercises are valid (not None)
+    valid_exercises = [ex for ex in exercises if ex is not None]
+    if not valid_exercises:
+        logging.error("No valid exercises provided to fetch_muscle_activation_from_openai")
+        return "{}"
+
     prompt = f"""
     Given the following exercises, determine the muscle groups activated and their activation intensity.
 
-    Exercises: {', '.join(exercises)}
+    Exercises: {', '.join(valid_exercises)}
 
     Only use the following predefined muscle groups:
     {json.dumps(list(MUSCLE_GROUPS.keys()), indent=2)}
@@ -320,23 +437,53 @@ def fetch_muscle_activation_from_openai(exercises):
     Return **only** valid JSON, with no extra text.
     """
 
-    client = openai.OpenAI(api_key=OPENAI_API_KEY)
+    import requests
+    
+    # Use API key from environment
+    api_key = os.getenv('OPENAI_API_KEY', '')
+    
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json"
+    }
+    
+    payload = {
+        "model": "gpt-4-turbo",
+        "messages": [
+            {"role": "system", "content": "You are a fitness expert."},
+            {"role": "user", "content": prompt}
+        ],
+        "max_tokens": 200
+    }
+    
+    # Create a session with explicit empty proxies
+    session = requests.Session()
+    session.proxies = {
+        "http": None,
+        "https": None,
+    }
     
     try:
-        response = client.chat.completions.create(
-            model="gpt-4-turbo",
-            messages=[
-                {"role": "system", "content": "You are a fitness expert."},
-                {"role": "user", "content": prompt}
-            ],
-            max_tokens=200
+        response = session.post(
+            "https://api.openai.com/v1/chat/completions",
+            headers=headers,
+            json=payload,
+            timeout=60
         )
-
-        logging.info(f"🔍 ChatGPT Response: {response}")
-        return response.choices[0].message.content.strip()
-    
+        
+        if response.status_code == 200:
+            response_json = response.json()
+            content = response_json["choices"][0]["message"]["content"].strip()
+            logging.info(f"🔍 ChatGPT Response: {content[:100]}...")  # Log first 100 chars
+            return content
+        else:
+            logging.error(f"API request failed: {response.status_code} - {response.text}")
+            return "{}"
+            
     except Exception as e:
         logging.error(f"❌ OpenAI API Error: {e}")
+        import traceback
+        logging.error(traceback.format_exc())
         return "{}"  # Return empty JSON if there's an error
 
 def process_muscle_activation_response(response_content):
@@ -357,15 +504,28 @@ def process_muscle_activation_response(response_content):
         if response_content.startswith("```json"):
             response_content = response_content.replace("```json", "").replace("```", "").strip()
 
-        activation_data = json.loads(response_content)  # ✅ Parse JSON safely
+        # ✅ Parse JSON safely
+        activation_data = json.loads(response_content)
 
-        # ✅ Fix issue: OpenAI response nests muscle activation under exercise names
+        # Check if activation_data is a dict (it should be)
+        if not isinstance(activation_data, dict):
+            logging.error(f"❌ Activation data is not a dictionary: {type(activation_data)}")
+            return {}
+
+        # ✅ Initialize the flattened activation dictionary
         flattened_activation = {}
-        for exercise, muscles in activation_data.items():  # Loop through exercises
-            for muscle_group, activation_value in muscles.items():  # Loop through muscle groups
-                if muscle_group.lower() in MUSCLE_GROUPS:
-                    for muscle in MUSCLE_GROUPS[muscle_group.lower()]:
-                        flattened_activation[muscle] = max(flattened_activation.get(muscle, 0), activation_value)
+        
+        # ✅ Process each muscle group in the activation data
+        for muscle_group, activation_value in activation_data.items():
+            muscle_group_lower = muscle_group.lower()
+            # Check if this is a known muscle group
+            if muscle_group_lower in MUSCLE_GROUPS:
+                # Map the muscle group to individual muscles
+                for muscle in MUSCLE_GROUPS[muscle_group_lower]:
+                    flattened_activation[muscle] = max(flattened_activation.get(muscle, 0), activation_value)
+            else:
+                # If not a known muscle group, add it directly
+                flattened_activation[muscle_group] = activation_value
 
         logging.info(f"✅ Processed Muscle Activation: {flattened_activation}")
         return flattened_activation
@@ -375,6 +535,8 @@ def process_muscle_activation_response(response_content):
         return {}
     except Exception as e:
         logging.error(f"❌ Error processing muscle activation: {e}")
+        import traceback
+        logging.error(traceback.format_exc())
         return {}
 
 def determine_muscle_activation(workouts):

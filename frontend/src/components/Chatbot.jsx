@@ -15,7 +15,7 @@ export default function Chatbot({ setSelectedDate }) {
     
     try {
       // Make a POST request to /workouts
-      const res = await fetch("workoutassistant-production.up.railway.app/workouts", {
+      const res = await fetch("http://localhost:8080/workouts", {
         method: "POST",
         headers: { 
             "Authorization": `Bearer ${token}`,

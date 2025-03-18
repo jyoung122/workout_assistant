@@ -163,6 +163,14 @@ def log_workout():
     workout_data = extract_workout_data(description, user_history)
 
     exercise_name = workout_data.get("exercise_name")
+
+    if not exercise_name:
+        logging.warning("Failed to extract exercise name from input, skipping muscle activation")
+        return jsonify({
+            "error": "Could not determine exercise name from input",
+            "data": workout_data
+        }), 400
+    
     weight = workout_data.get("weight")
     reps = workout_data.get("reps")
     desc = workout_data.get("description")

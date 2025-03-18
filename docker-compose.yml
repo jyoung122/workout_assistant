@@ -1,0 +1,21 @@
+version: '3'
+
+services:
+  api:
+    build: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - .:/app
+    env_file: 
+      - ./backend/.env
+    environment:
+      - OPENAI_API_KEY=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
+      - PYTHONPATH=/app
+      # Disable all proxies in the container
+      - HTTP_PROXY=
+      - HTTPS_PROXY=
+      - http_proxy=
+      - https_proxy=
+      - no_proxy=*
+    command: gunicorn -w 4 -b 0.0.0.0:8080 'backend.app:app'
