@@ -10,7 +10,7 @@ services:
     env_file: 
       - ./backend/.env
     environment:
-      - OPENAI_API_KEY=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
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
       - PYTHONPATH=/app
       # Disable all proxies in the container
       - HTTP_PROXY=
