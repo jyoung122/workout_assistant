@@ -75,7 +75,7 @@ def get_db_connection():
         db_name = "postgres"  # Your database name in Cloud SQL
         # Use the Unix socket path for Cloud SQL Proxy:
         # The instance connection name is automatically mounted under /cloudsql
-        instance_connection_name = os.getenv("INSTANCE_CONNECTION_NAME", "project:region:instance")
+        instance_connection_name = os.getenv("INSTANCE_CONNECTION_NAME", "workout-assistant-452417:us-central1:workout-db")
         unix_socket_path = f"/cloudsql/{instance_connection_name}"
 
         # Connect to the database via the Unix socket
