@@ -10,6 +10,7 @@ import jwt as pyjwt
 from google.auth.transport import requests
 from google.oauth2 import id_token
 from functools import wraps
+import os
 
 import psycopg2
 from backend.main import TIMEFRAME_MAP, extract_workout_data, insert_workout, fetch_workout_history, determine_muscle_activation, fetch_workouts_for_date
@@ -37,24 +38,53 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(
 
 logger = logging.getLogger(__name__)
 
+# def get_db_connection():
+#     """Establishes and returns a connection to the Google Cloud SQL PostgreSQL database."""
+#     try:
+#         logging.info("🌐 Attempting to connect to Google Cloud SQL PostgreSQL...")
+
+#         # Connection details (Using your actual details from the previous logs)
+#         db_user = "postgres"  # Your Cloud SQL username
+#         db_password = "1845"  # Securely fetch from environment variable
+#         db_name = "postgres"  # Your database name in Cloud SQL
+#         db_host = "35.193.103.85"  # Your Cloud SQL Public IP
+
+#         # Connect to the database
+#         conn = psycopg2.connect(
+#             dbname=db_name,
+#             user=db_user,
+#             password=db_password,
+#             host=db_host,
+#             port=5432
+#         )
+
+#         logging.info("✅ Successfully connected to Google Cloud SQL!")
+#         return conn
+
+#     except psycopg2.Error as e:
+#         logging.error(f"❌ Database connection failed: {e}")
+#         return None
+
 def get_db_connection():
-    """Establishes and returns a connection to the Google Cloud SQL PostgreSQL database."""
+    """Establishes and returns a connection to the Google Cloud SQL PostgreSQL database using the Cloud SQL Proxy."""
     try:
-        logging.info("🌐 Attempting to connect to Google Cloud SQL PostgreSQL...")
+        logging.info("🌐 Attempting to connect to Google Cloud SQL PostgreSQL via Cloud SQL Proxy...")
 
-        # Connection details (Using your actual details from the previous logs)
         db_user = "postgres"  # Your Cloud SQL username
-        db_password = "1845"  # Securely fetch from environment variable
+        db_password = "1845"  # Securely fetch from an environment variable ideally
         db_name = "postgres"  # Your database name in Cloud SQL
-        db_host = "35.193.103.85"  # Your Cloud SQL Public IP
+        # Use the Unix socket path for Cloud SQL Proxy:
+        # The instance connection name is automatically mounted under /cloudsql
+        instance_connection_name = os.getenv("INSTANCE_CONNECTION_NAME", "project:region:instance")
+        unix_socket_path = f"/cloudsql/{instance_connection_name}"
 
-        # Connect to the database
+        # Connect to the database via the Unix socket
         conn = psycopg2.connect(
             dbname=db_name,
             user=db_user,
             password=db_password,
-            host=db_host,
-            port=5432
+            host=unix_socket_path,
+            port=5432  # Port can be left as default, it's for TCP; the Unix socket does not really use this
         )
 
         logging.info("✅ Successfully connected to Google Cloud SQL!")
