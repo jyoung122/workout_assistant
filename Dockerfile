@@ -18,4 +18,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Run the web service during development (will be overridden by docker-compose)
-CMD ["python", "-m", "uvicorn", "backend.app:app", "--host", "0.0.0.0", "--port", "8080", "--reload"]
+CMD ["gunicorn", "-w", "4", "-b", "0.0.0.0:8080", "backend.app:app"]
