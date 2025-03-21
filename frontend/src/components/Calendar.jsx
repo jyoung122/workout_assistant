@@ -7,7 +7,7 @@ export default function CalendarComponent({ selectedDate, setSelectedDate }) {
   const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
-    fetch("http://localhost:8080/") // or 5000, whichever port your Flask app is on
+    fetch("https://workout-505754151265.us-central1.run.app/") // or 5000, whichever port your Flask app is on
       .then((res) => {
         if (!res.ok) {
           throw new Error(`Health check failed with status: ${res.status}`);

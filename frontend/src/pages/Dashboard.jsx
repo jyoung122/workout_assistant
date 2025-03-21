@@ -21,7 +21,7 @@ export default function Dashboard() {
       return;
     }
 
-    fetch(`http://localhost:8080/workouts/${formattedDate}`, {
+    fetch(`https://workout-505754151265.us-central1.run.app/workouts/${formattedDate}`, {
       method: "GET",
       headers: {
         "Authorization": `Bearer ${token}`, // Send JWT token for authentication

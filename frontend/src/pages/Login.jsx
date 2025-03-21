@@ -34,7 +34,7 @@ export default function Login() {
                     return;
                 }
             
-                fetch("http://127.0.0.1:5001/login/google", {
+                fetch("https://workout-505754151265.us-central1.run.app/login/google", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ id_token: tokenId }),
