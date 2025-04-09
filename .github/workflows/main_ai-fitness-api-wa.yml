@@ -66,7 +66,7 @@ jobs:
 
       - name: Unzip artifact for deployment
         run: |
-          unzip artifact/release.zip -d
+          unzip artifact/release.zip -d .
           rm -rf artifact
 
       
