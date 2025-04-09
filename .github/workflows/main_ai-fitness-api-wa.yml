@@ -66,11 +66,8 @@ jobs:
 
       - name: Unzip artifact for deployment
         run: |
-          cd artifact
-          mkdir deploy
-          unzip release.zip -d deploy
-          rm deploy/release.zip
-
+          unzip artifact/release.zip -d
+          rm -rf artifact
 
       
       - name: 'Deploy to Azure Web App'
