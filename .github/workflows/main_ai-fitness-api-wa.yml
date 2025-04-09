@@ -41,15 +41,14 @@ jobs:
       - name: Zip artifact for deployment
         run: |
           cd backend
-          zip release.zip ./* -r
+          zip -r ../release.zip .   # Put zip in root and zip contents, not folder
 
-      - name: Upload artifact for deployment jobs
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: python-app
           path: |
-            backend/release.zip
-            !venv/
+            release.zip
 
   deploy:
     runs-on: ubuntu-latest
@@ -63,9 +62,14 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: python-app
+          path: ./artifact
 
       - name: Unzip artifact for deployment
-        run: unzip release.zip
+        run: |
+          cd artifact
+          unzip release.zip
+          rm release.zip
+
 
       
       - name: 'Deploy to Azure Web App'
@@ -73,5 +77,4 @@ jobs:
         id: deploy-to-webapp
         with:
           app-name: 'Ai-Fitness-api-WA'
-          slot-name: 'Production'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_040768CD5E4748A2A163E9EC136C797E }}
