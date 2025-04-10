@@ -66,8 +66,10 @@ jobs:
 
       - name: Unzip artifact for deployment
         run: |
-          unzip artifact/release.zip -d .
-          rm -rf artifact
+          cd artifact
+          unzip release.zip
+          rm release.zip
+
 
       
       - name: 'Deploy to Azure Web App'
@@ -75,5 +77,4 @@ jobs:
         id: deploy-to-webapp
         with:
           app-name: 'Ai-Fitness-api-WA'
-          slot-name: 'production'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_040768CD5E4748A2A163E9EC136C797E }}
