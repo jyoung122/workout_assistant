@@ -77,3 +77,4 @@ jobs:
         with:
           app-name: 'Ai-Fitness-api-WA'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_040768CD5E4748A2A163E9EC136C797E }}
+          package: ./deploy
