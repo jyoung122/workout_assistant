@@ -24,7 +24,7 @@ jobs:
       - name: Set up Python version
         uses: actions/setup-python@v5
         with:
-          python-version: '3.13'
+          python-version: '3.11'
 
       - name: Create and start virtual environment
         run: |
@@ -68,9 +68,6 @@ jobs:
         run: |
           mkdir deploy
           unzip artifact/release.zip -d deploy
-          rm -rf release.zip
-
-
       
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
