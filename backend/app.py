@@ -17,16 +17,23 @@ def index():
     return '<h1>Hello, World!</h1>'
 
 
+@app.route('/tables', methods=['GET'])
+def get_tables():
+    try:
+        conn = psycopg2.connect(os.getenv("AZURE_POSTGRESQL_CONNECTIONSTRING"))
+        cursor = conn.cursor()
+        cursor.execute("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';")
+        tables = [row[0] for row in cursor.fetchall()]
+        conn.close()
+        return jsonify(tables)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 @app.route('/init-db', methods=['POST'])
 def init_db():
     try:
-        conn = psycopg2.connect(
-            user=os.getenv("DB_USER"),
-            password=os.getenv("DB_PASSWORD"),
-            host=os.getenv("DB_HOST"),
-            port=os.getenv("DB_PORT"),
-            database=os.getenv("DB_NAME")
-        )
+        conn = psycopg2.connect(os.getenv("AZURE_POSTGRESQL_CONNECTIONSTRING"))
         cursor = conn.cursor()
 
         # Users Table
