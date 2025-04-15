@@ -48,10 +48,11 @@ export default function Landing() {
               <span className="sr-only">Fit Ai</span>
               <img
                 alt=""
-                src="https://tailwindcss.com/plus-assets/img/logos/mark.svg?color=indigo&shade=600"
+                src="public/logo.png"
                 className="h-8 w-auto"
               />
             </a>
+            <p>Fit Ai</p>
           </div>
           <PopoverGroup className="flex gap-x-4">
             <a

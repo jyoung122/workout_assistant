@@ -16,10 +16,10 @@ export default function Dashboard() {
 
     const token = localStorage.getItem("token");
 
-    if (!token) {
-      window.location.href = "/login"; // Redirect if user is not logged in
-      return;
-    }
+    //if (!token) {
+    //  window.location.href = "/login"; // Redirect if user is not logged in
+    //  return;
+   // }
 
     fetch(`https://workout-505754151265.us-central1.run.app/workouts/${formattedDate}`, {
       method: "GET",

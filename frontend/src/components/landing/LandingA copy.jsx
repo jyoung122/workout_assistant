@@ -4,28 +4,34 @@ import { PencilSquareIcon, ChartBarIcon, HeartIcon, UserGroupIcon } from '@heroi
 
 const features = [
   {
-    name: 'Workout Logging',
+    name: 'Personalized Workouts',
     description:
-      'Forget rigid, preset lists. Log your workouts in your own words and let our NLP engine identify the exercise and the muscles it targets.',
+      'Get workouts tailored to your fitness level and goals, whether you are a beginner or an advanced athlete.',
     icon: PencilSquareIcon
   },
   {
-    name: 'Muscle Activation Insights',
+    name: 'Muscle Activation Analytics',
     description:
-      'Visualize which muscles are working during your lifts, so you can understand your training better than ever before.',
-    icon: ChartBarIcon
+      'Track muscle activation and performance metrics to optimize your workouts and prevent injuries.',
+    icon: function Icon() {
+      return <svg className="h-6 w-6 text-indigo-600" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10A10.011 10.011 0 0 0 12 2zm1.5 14H10v-2h3.5zm0-4H10V7h3.5z"/></svg>;
+    },
   },
   {
-    name: 'Recovery Analytics',
+    name: 'Progress Analytics',
     description:
-      'Receive personalized recovery recommendations—know exactly which muscles should be recovering and which are ready for your next challenge.',
-      icon: HeartIcon
+      'Insights into your volume, intensity, and recovery trends.',
+      icon: function Icon() {
+      return <svg className="h-6 w-6 text-indigo-600" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10A10.011 10.011 0 0 0 12 2zm1.5 14H10v-2h3.5zm0-4H10V7h3.5z"/></svg>;
+    },
   },
   {
-    name: 'Social Community',
+    name: 'Challenge Friends',
     description:
-      'Join a community of people who share their journey, offer support, and celebrate every milestone together.',
-    icon: UserGroupIcon
+      'Join challenges with friends and track your progress together.',
+    icon: function Icon() {
+      return <svg className="h-6 w-6 text-indigo-600" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10A10.011 10.011 0 0 0 12 2zm1.5 14H10v-2h3.5zm0-4H10V7h3.5z"/></svg>;
+    },
   },
 
 
@@ -34,44 +40,16 @@ const features = [
 export default function LandingPageA() {
   return (
     <div >
-      <div className="overflow-hidden bg-white py-24 sm:py-32">
-
-        <div className="mx-auto max-w-7xl px-6 lg:px-8">
-          <div className="mx-auto grid max-w-2xl grid-cols-1 gap-x-8 gap-y-16 sm:gap-y-20 lg:mx-0 lg:max-w-none lg:grid-cols-2">
-            <div className="lg:pt-4 lg:pr-8">
-              <div className="lg:max-w-lg">
-                <h2 className="text-4xl/7 font-semibold text-blue-800">Elevate Your Workout.</h2>
-                <p className="mt-2 text-3xl font-semibold tracking-tight text-pretty text-grey-800">
-                Unlock professional-grade insights and recovery analytics—without the hassle of preset workout lists.
-                </p>
-                <p className="mt-6 text-lg/8 text-gray-950">
-                  At Lifta.fit, we believe every lifter—whether you’re just starting out or you’re already a gym veteran—deserves to know exactly what’s happening with every rep, set, and muscle. Our innovative NLP-powered workout logging lets you simply text your workout, and our smart algorithms decode the exercise details, muscle activations, and recovery needs. This means you get tailored, real-time insights that empower you to train smarter and recover better.
-                </p>
-  
-              </div>
-            </div>
-            <img
-              alt="Product screenshot"
-              src="https://tailwindcss.com/plus-assets/img/component-images/dark-project-app-screenshot.png"
-              width={2432}
-              height={1442}
-              className="w-[48rem] max-w-none rounded-xl shadow-xl ring-1 ring-gray-400/10 sm:w-[57rem] md:-ml-4 lg:-ml-0"
-            />
-          </div>
-        </div>
-        </div>
-
 
       <div className="relative isolate h-auto px-6 pt-4 lg:px-8 z-10">
           <div className="absolute inset-0 -z-10 bg-cover bg-center" style={{ backgroundImage: "url('man_powerlift.jpg')" }}></div>
           <div className="mx-auto max-w-2xl py-32 sm:py-48 lg:py-56">
             <div className="text-center">
-              <h1 className="text-5xl font-semibold tracking-tight text-balance text-gray-100 ">
-              Lifta.fit – Elevate Your Workout.</h1>
+              <h1 className="text-5xl font-semibold tracking-tight text-balance text-gray-100 sm:text-7xl">
+                AI-Powered Personalized Fitness 
+              </h1>
               <p className="mt-8 text-lg font-medium text-pretty text-gray-100 sm:text-xl/8">
-              Track your lifts as if you’re texting your coach.
-              Unlock professional-grade insights and recovery analytics—without the hassle of preset workout lists.
-
+                Personalized workouts. Muscle activation analytics. Social challenge feeds. Welcome to Fit Ai.
               </p>
               <div className="mt-10 flex items-center justify-center gap-x-6">
                 <a
@@ -93,7 +71,7 @@ export default function LandingPageA() {
       <div className="relative isolate bg-grey py-24 sm:py-32 z-15">
         <div className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="mx-auto max-w-2xl lg:text-center">
-            <div className="text-3xl font-semibold text-indigo-600">All-In-One Workout Tracking & Recovery Insights</div>
+            <h2 className="text-base/7 font-semibold text-indigo-600">Meet your goals faster</h2>
             <p className="mt-2 text-4xl font-semibold tracking-tight text-pretty text-gray-900 sm:text-5xl lg:text-balance">
             Elevate your training with real insights
             </p>
